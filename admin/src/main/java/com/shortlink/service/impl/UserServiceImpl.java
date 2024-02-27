@@ -7,6 +7,8 @@ package com.shortlink.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shortlink.common.convention.exception.ClientException;
+import com.shortlink.common.enums.UserErrorCodeEnums;
 import com.shortlink.dao.entity.UserDO;
 import com.shortlink.dao.mapper.UserMapper;
 import com.shortlink.dto.response.UserRespDTO;
@@ -25,8 +27,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         QueryWrapper<UserDO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         UserDO userDO = baseMapper.selectOne(queryWrapper);
+        // 用户不存在，通过全局异常处理器抛出异常
         if(userDO == null){
-            return null;
+            throw  new ClientException(UserErrorCodeEnums.USER_NULL);
         }
         // 将查到的数据封装到respDto对象上面，将数据进行返回
         UserRespDTO userRespDTO = new UserRespDTO();
