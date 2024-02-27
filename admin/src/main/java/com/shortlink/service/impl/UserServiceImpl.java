@@ -25,6 +25,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         QueryWrapper<UserDO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         UserDO userDO = baseMapper.selectOne(queryWrapper);
+        if(userDO == null){
+            return null;
+        }
         // 将查到的数据封装到respDto对象上面，将数据进行返回
         UserRespDTO userRespDTO = new UserRespDTO();
         BeanUtils.copyProperties(userDO, userRespDTO);
