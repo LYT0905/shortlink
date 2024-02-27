@@ -7,6 +7,12 @@
     <groupId>com</groupId>
     <artifactId>shortlink</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>admin</module>
+        <module>project</module>
+        <module>gateway</module>
+    </modules>
 
     <properties>
         <java.version>17</java.version>
