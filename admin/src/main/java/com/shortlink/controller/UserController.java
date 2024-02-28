@@ -1,8 +1,10 @@
 package com.shortlink.controller;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.common.convention.result.Results;
+import com.shortlink.dto.response.UserActualRespDTO;
 import com.shortlink.dto.response.UserRespDTO;
 import com.shortlink.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +24,22 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * 根据用户名查询用户
+     * 根据用户名查询用户(手机号已脱敏)
      * @param username
      * @return UserRespDTO
      */
     @GetMapping("/api/short-link/admin/v1/user/{username}")
     public Result<UserRespDTO> getUserByUserName(@PathVariable String username){
-        UserRespDTO result = userService.getUserByUsername(username);
-        return Results.success(result);
+        return Results.success(userService.getUserByUsername(username));
+    }
+
+    /**
+     * 根据用户名查询用户(手机号未脱敏)
+     * @param username
+     * @return UserRespDTO
+     */
+    @GetMapping("/api/short-link/admin/v1/user/{username}")
+    public Result<UserActualRespDTO> getActualUserByUserName(@PathVariable String username){
+        return Results.success(BeanUtil.toBean(userService.getUserByUsername(username), UserActualRespDTO.class));
     }
 }

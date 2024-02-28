@@ -5,8 +5,6 @@ package com.shortlink.dto.response;
  * @date 2024/02/27/17:27
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.shortlink.common.serialize.PhoneDesensitizationSerializer;
 import lombok.Data;
 
 /**
@@ -14,7 +12,7 @@ import lombok.Data;
  */
 
 @Data
-public class UserRespDTO {
+public class UserActualRespDTO {
     /**
      * id
      */
@@ -31,9 +29,8 @@ public class UserRespDTO {
     private String realName;
 
     /**
-     * 手机号, 将手机号进行脱敏
+     * 手机号, 无脱敏
      */
-    @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
 
     /**
