@@ -6,13 +6,16 @@ package com.shortlink.service.impl;
  */
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.common.convention.exception.ClientException;
 import com.shortlink.common.enums.UserErrorCodeEnums;
 import com.shortlink.dao.entity.UserDO;
 import com.shortlink.dao.mapper.UserMapper;
 import com.shortlink.dto.request.UserRegisterReqDTO;
+import com.shortlink.dto.request.UserUpdateReqDTO;
 import com.shortlink.dto.response.UserRespDTO;
 import com.shortlink.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +26,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import static com.shortlink.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
-import static com.shortlink.common.enums.UserErrorCodeEnums.*;
+import static com.shortlink.common.enums.UserErrorCodeEnums.USER_NAME_EXIST;
+import static com.shortlink.common.enums.UserErrorCodeEnums.USER_SAVE_ERROR;
 
 /**
  * userservice实现层
@@ -91,5 +95,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 根据用户名修改用户信息
+     * @param requestParam 请求参数
+     */
+    @Override
+    public void update(UserUpdateReqDTO requestParam) {
+        // TODO 验证当前用户是否为登录用户
+        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).
+                eq(UserDO::getUsername, requestParam.getUsername());
+        baseMapper.update(BeanUtil.toBean(requestParam, UserDO.class), queryWrapper);
     }
 }
