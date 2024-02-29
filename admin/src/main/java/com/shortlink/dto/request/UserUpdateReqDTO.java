@@ -6,6 +6,10 @@ import lombok.Data;
  * @author LYT0905
  * @date 2024/02/29/12:54
  */
+
+/**
+ * 用户信息修改响应实体参数
+ */
 @Data
 public class UserUpdateReqDTO {
     /**

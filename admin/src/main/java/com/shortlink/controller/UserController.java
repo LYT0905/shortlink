@@ -4,9 +4,11 @@ package com.shortlink.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.common.convention.result.Results;
+import com.shortlink.dto.request.UserLoginReqDTO;
 import com.shortlink.dto.request.UserRegisterReqDTO;
 import com.shortlink.dto.request.UserUpdateReqDTO;
 import com.shortlink.dto.response.UserActualRespDTO;
+import com.shortlink.dto.response.UserLoginRespDTO;
 import com.shortlink.dto.response.UserRespDTO;
 import com.shortlink.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -73,5 +75,25 @@ public class UserController {
     public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam){
         userService.update(requestParam);
         return Results.success();
+    }
+
+    /**
+     * 用户登录
+     * @param requestParam 用户登录请求参数
+     * @return token
+     */
+    @PostMapping("/api/short-link/admin/v1/user/login")
+    public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam){
+        return Results.success(userService.login(requestParam));
+    }
+
+    /**
+     * 检查用户是否登录
+     * @param token 用户token
+     * @return boolean
+     */
+    @GetMapping("/api/short-link/admin/v1/user/check-login")
+    public Result<Boolean> checkLogin(@RequestParam("username") String username, @RequestParam("token") String token){
+        return Results.success(userService.checkLogin(username, token));
     }
 }
