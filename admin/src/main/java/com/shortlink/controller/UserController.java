@@ -96,4 +96,16 @@ public class UserController {
     public Result<Boolean> checkLogin(@RequestParam("username") String username, @RequestParam("token") String token){
         return Results.success(userService.checkLogin(username, token));
     }
+
+    /**
+     * 用户退出登录
+     * @param username 用户名
+     * @param token token标识
+     * @return void
+     */
+    @DeleteMapping("/api/short-link/admin/v1/user/logout")
+    public Result<Void> logout(@RequestParam("username") String username, @RequestParam("token") String token){
+        userService.logout(username, token);
+        return Results.success();
+    }
 }
