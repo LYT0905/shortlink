@@ -8,6 +8,7 @@ import com.shortlink.common.biz.user.UserContext;
 import com.shortlink.dao.entity.GroupDO;
 import com.shortlink.dao.mapper.GroupMapper;
 import com.shortlink.dto.request.ShortLinkGroupUpdateReqDTO;
+import com.shortlink.dto.request.ShortLinkGroupUpdateSortReqDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.service.GroupService;
 import com.shortlink.toolkit.RandomGenerator;
@@ -98,5 +99,19 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getGid, gid)
                 .eq(GroupDO::getName, UserContext.getUsername());
         return baseMapper.selectOne(queryWrapper) != null;
+    }
+
+    @Override
+    public void updateGroupSort(List<ShortLinkGroupUpdateSortReqDTO> requestParam) {
+        requestParam.forEach(each -> {
+            GroupDO groupDO = GroupDO.builder()
+                    .sortOrder(each.getSortOrder())
+                    .build();
+            LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                    .eq(GroupDO::getUsername, UserContext.getUsername())
+                    .eq(GroupDO::getGid, each.getGid())
+                    .eq(GroupDO::getDelFlag, 0);
+            baseMapper.update(groupDO, queryWrapper);
+        });
     }
 }

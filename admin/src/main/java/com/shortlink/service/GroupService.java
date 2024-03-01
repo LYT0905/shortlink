@@ -3,6 +3,7 @@ package com.shortlink.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shortlink.dao.entity.GroupDO;
 import com.shortlink.dto.request.ShortLinkGroupUpdateReqDTO;
+import com.shortlink.dto.request.ShortLinkGroupUpdateSortReqDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 
 import java.util.List;
@@ -39,4 +40,11 @@ public interface GroupService extends IService<GroupDO> {
      * @return
      */
     void deleteGroup(String gid);
+
+    /**
+     * 修改短链接分组排序
+     * @param requestParam
+     * @return
+     */
+    void updateGroupSort(List<ShortLinkGroupUpdateSortReqDTO> requestParam);
 }
