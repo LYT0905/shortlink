@@ -1,10 +1,12 @@
 package com.shortlink.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.dao.entity.GroupDO;
 import com.shortlink.dao.mapper.GroupMapper;
 import com.shortlink.service.GroupService;
-import lombok.RequiredArgsConstructor;
+import com.shortlink.toolkit.RandomGenerator;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,8 +15,28 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
-@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
-    private final GroupService groupService;
+    @Override
+    public void saveGroup(String groupName) {
+        String gid;
+        do {
+            gid = RandomGenerator.generateRandom();
+        } while (hasGid(gid));
+
+        GroupDO groupDO = GroupDO.builder()
+                .name(groupName)
+                .gid(gid)
+                .build();
+
+        baseMapper.insert(groupDO);
+    }
+
+    private boolean hasGid(String gid){
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getGid, gid)
+                // TODO 设置用户名
+                .eq(GroupDO::getName, null);
+        return baseMapper.selectOne(queryWrapper) != null;
+    }
 }

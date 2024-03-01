@@ -8,4 +8,11 @@ import com.shortlink.dao.entity.GroupDO;
  * @date 2024/03/01/16:05
  */
 public interface GroupService extends IService<GroupDO> {
+
+    /**
+     * 新增短链接分组
+     * @param groupName 请求参数
+     * @return void
+     */
+    void saveGroup(String groupName);
 }

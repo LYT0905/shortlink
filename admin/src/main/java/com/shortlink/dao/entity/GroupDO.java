@@ -2,7 +2,10 @@ package com.shortlink.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.shortlink.common.datatbase.BaseDO;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author LYT0905
@@ -11,6 +14,9 @@ import lombok.Data;
 
 @Data
 @TableName("t_group")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class GroupDO extends BaseDO {
     /**
      * id
