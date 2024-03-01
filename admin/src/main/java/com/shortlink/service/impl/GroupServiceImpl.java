@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.common.biz.user.UserContext;
 import com.shortlink.dao.entity.GroupDO;
 import com.shortlink.dao.mapper.GroupMapper;
+import com.shortlink.dto.request.ShortLinkGroupUpdateReqDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.service.GroupService;
 import com.shortlink.toolkit.RandomGenerator;
@@ -22,6 +23,10 @@ import java.util.List;
 @Service
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
+    /**
+     * 新增短链接分组
+     * @param groupName 请求参数
+     */
     @Override
     public void saveGroup(String groupName) {
         String gid;
@@ -53,6 +58,26 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         return BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
     }
 
+    /**
+     * 修改短链接分组名称
+     * @param requestParam 修改名称与修改对象
+     */
+    @Override
+    public void updateGroup(ShortLinkGroupUpdateReqDTO requestParam) {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getDelFlag, 0)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getGid, requestParam.getGid());
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(requestParam.getName());
+        baseMapper.update(groupDO, queryWrapper);
+    }
+
+    /**
+     * 判断是否存在
+     * @param gid
+     * @return 存在返回true, 不存在返回false
+     */
     private boolean hasGid(String gid){
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)

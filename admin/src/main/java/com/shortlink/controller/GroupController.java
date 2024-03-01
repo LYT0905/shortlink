@@ -3,13 +3,11 @@ package com.shortlink.controller;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.common.convention.result.Results;
 import com.shortlink.dto.request.ShortLinkGroupSaveReqDTO;
+import com.shortlink.dto.request.ShortLinkGroupUpdateReqDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.service.GroupService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -42,5 +40,16 @@ public class GroupController{
     @GetMapping("/api/short-link/admin/v1/group")
     public Result<List<ShortLinkGroupRespDTO>> listGroup(){
         return Results.success(groupService.lisGroup());
+    }
+
+    /**
+     * 修改短链接分组名称
+     * @param requestParam 修改名称与修改对象
+     * @return void
+     */
+    @PutMapping("/api/short-link/admin/v1/group")
+    public Result<Void> updateGroup(@RequestBody ShortLinkGroupUpdateReqDTO requestParam){
+        groupService.updateGroup(requestParam);
+        return Results.success();
     }
 }
