@@ -30,9 +30,3 @@
 ## 五.项目原理
 
 ![img](https://images-machen.oss-cn-beijing.aliyuncs.com/image-20231115133642504.png)
-
-## 六.项目来历
-
-本项目出自马哥的拿个offer星球，如有需要请联系马哥！本项目仅做学习使用，不会参与任何商业化活动！
-
-![img](https://images-machen.oss-cn-beijing.aliyuncs.com/1_990064918_171_84_3_716500817_c4659af930df3a2532d02b8fcc0f0cbe.png)
