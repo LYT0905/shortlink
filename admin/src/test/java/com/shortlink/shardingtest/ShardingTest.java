@@ -24,6 +24,7 @@ public class ShardingTest {
             "  `update_time` datetime DEFAULT NULL COMMENT '修改时间',\n" +
             "  `del_time` bigint DEFAULT '0' COMMENT '删除时间戳',\n" +
             "  `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',\n" +
+            "  `favicon` varchar(256) DEFAULT NULL COMMENT '网络图标',\n" +
             "  PRIMARY KEY (`id`),\n" +
             "  UNIQUE KEY `idx_unique_full-short-url` (`full_short_url`,`del_time`) USING BTREE\n" +
             ") ENGINE=InnoDB AUTO_INCREMENT=1764576595958919170 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci";
