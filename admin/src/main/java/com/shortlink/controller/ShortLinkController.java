@@ -2,13 +2,11 @@ package com.shortlink.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shortlink.common.convention.result.Result;
-import com.shortlink.common.convention.result.Results;
-import com.shortlink.dto.request.ShortLinkCreateReqDTO;
-import com.shortlink.dto.request.ShortLinkPageReqDTO;
-import com.shortlink.dto.response.ShortLinkCreateRespDTO;
-import com.shortlink.dto.response.ShortLinkPageRespDTO;
-import com.shortlink.service.ShortLinkService;
-import lombok.RequiredArgsConstructor;
+import com.shortlink.remote.dto.ShortLinkRemoteService;
+import com.shortlink.remote.dto.request.ShortLinkCreateReqDTO;
+import com.shortlink.remote.dto.request.ShortLinkPageReqDTO;
+import com.shortlink.remote.dto.response.ShortLinkCreateRespDTO;
+import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,23 +14,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author LYT0905
- * @date 2024/03/03/21:41
+ * @date 2024/03/05/12:47
  */
 
 @RestController
-@RequiredArgsConstructor
 public class ShortLinkController {
 
-    private final ShortLinkService shortLinkService;
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
+    };
 
     /**
      * 创建短链接
      * @param requestParam 短链接创建参数
      * @return ShortLinkCreateRespDTO
      */
-    @PostMapping("/api/short-link/v1/create")
+    @PostMapping("/api/short-link/admin/v1/create")
     public Result<ShortLinkCreateRespDTO> create(@RequestBody ShortLinkCreateReqDTO requestParam){
-        return Results.success(shortLinkService.createShortLink(requestParam));
+        return shortLinkRemoteService.createShortLink(requestParam);
     }
 
     /**
@@ -40,8 +38,8 @@ public class ShortLinkController {
      * @param requestParam 短链接分页查询参数
      * @return 短链接分页查询返回结果
      */
-    @GetMapping("/api/short-link/v1/page")
+    @GetMapping("/api/short-link/admin/v1/page")
     public Result<IPage<ShortLinkPageRespDTO>> page(ShortLinkPageReqDTO requestParam){
-        return Results.success(shortLinkService.pageShortLink(requestParam));
+        return shortLinkRemoteService.pageShortLink(requestParam);
     }
 }
