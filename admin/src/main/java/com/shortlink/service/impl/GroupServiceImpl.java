@@ -5,16 +5,21 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.common.biz.user.UserContext;
+import com.shortlink.common.convention.result.Result;
 import com.shortlink.dao.entity.GroupDO;
 import com.shortlink.dao.mapper.GroupMapper;
 import com.shortlink.dto.request.ShortLinkGroupUpdateReqDTO;
 import com.shortlink.dto.request.ShortLinkGroupUpdateSortReqDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
+import com.shortlink.remote.dto.ShortLinkRemoteService;
 import com.shortlink.service.GroupService;
 import com.shortlink.toolkit.RandomGenerator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author LYT0905
@@ -23,6 +28,8 @@ import java.util.List;
 
 @Service
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
+
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {};
 
     /**
      * 新增短链接分组
@@ -56,7 +63,17 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
         List<GroupDO> groupDOS = baseMapper.selectList(queryWrapper);
-        return BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
+        // 查询每组的短链接数量
+        Result<List<ShortLinkGroupRespDTO>> listResult = shortLinkRemoteService.listGroupShortLinkCount(groupDOS.stream()
+                .map(GroupDO::getGid).collect(Collectors.toList()));
+        List<ShortLinkGroupRespDTO> shortLinkGroupRespDTO = BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
+        // 设置每组的短链接数量
+        shortLinkGroupRespDTO.forEach((each) -> {
+            Optional<ShortLinkGroupRespDTO> first = listResult.getData().stream()
+                            .filter(item -> Objects.equals(item.getGid(), each.getGid())).findFirst();
+            first.ifPresent(item -> each.setShortLinkCount(first.get().getShortLinkCount()));
+        });
+        return shortLinkGroupRespDTO;
     }
 
     /**
