@@ -13,6 +13,7 @@ import com.shortlink.common.convention.result.Result;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.remote.dto.request.ShortLinkCreateReqDTO;
 import com.shortlink.remote.dto.request.ShortLinkPageReqDTO;
+import com.shortlink.remote.dto.request.ShortLinkUpdateReqDTO;
 import com.shortlink.remote.dto.response.ShortLinkCreateRespDTO;
 import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
 
@@ -26,12 +27,22 @@ import java.util.Map;
 
 public interface ShortLinkRemoteService {
 
+    /**
+     * 创建短链接
+     * @param requestParam 短链接创建参数
+     * @return ShortLinkCreateRespDTO
+     */
     default Result<ShortLinkCreateRespDTO> createShortLink(ShortLinkCreateReqDTO requestParam){
         String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/create", JSON.toJSONString(requestParam));
         return JSON.parseObject(resultBodyStr, new TypeReference<>() {
         });
     }
 
+    /**
+     * 短链接分页查询
+     * @param requestParam 短链接分页查询参数
+     * @return 短链接分页查询返回结果
+     */
     default Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
         Map<String, Object> map = new HashMap<>();
         map.put("gid", requestParam.getGid());
@@ -42,11 +53,25 @@ public interface ShortLinkRemoteService {
         });
     }
 
+    /**
+     * 查询当前组下的短链接数量
+     * @param requestParam 分组标识
+     * @return 短链接数量返回
+     */
     default Result<List<ShortLinkGroupRespDTO>> listGroupShortLinkCount(List<String> requestParam){
         Map<String, Object> map = new HashMap<>();
         map.put("requestParam", requestParam);
         String resultCount = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count", map);
         return JSON.parseObject(resultCount, new TypeReference<>() {
         });
+    }
+
+    /**
+     * 修改短链接
+     * @param requestParam 修改短链接请求参数
+     * @return void
+     */
+    default void updateShortLink(ShortLinkUpdateReqDTO requestParam){
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(requestParam));
     }
 }

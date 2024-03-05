@@ -2,9 +2,11 @@ package com.shortlink.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shortlink.common.convention.result.Result;
+import com.shortlink.common.convention.result.Results;
 import com.shortlink.remote.dto.ShortLinkRemoteService;
 import com.shortlink.remote.dto.request.ShortLinkCreateReqDTO;
 import com.shortlink.remote.dto.request.ShortLinkPageReqDTO;
+import com.shortlink.remote.dto.request.ShortLinkUpdateReqDTO;
 import com.shortlink.remote.dto.response.ShortLinkCreateRespDTO;
 import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,5 +50,19 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/page")
     public Result<IPage<ShortLinkPageRespDTO>> page(ShortLinkPageReqDTO requestParam){
         return shortLinkRemoteService.pageShortLink(requestParam);
+    }
+
+    /**
+     * 修改短链接
+     * @param requestParam 修改短链接请求参数
+     * @return void
+     * "validDateType": 1,
+     *     "validDate": "2024-03-04 21:22:01",
+     *     "describe": "string"
+     */
+    @PostMapping("/api/short-link/admin/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam){
+        shortLinkRemoteService.updateShortLink(requestParam);
+        return Results.success();
     }
 }
