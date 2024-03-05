@@ -31,25 +31,31 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {};
 
+
+    @Override
+    public void saveGroup(String username, String groupName) {
+        String gid;
+        do {
+            gid = RandomGenerator.generateRandom();
+        } while (hasGid(username, gid));
+
+        GroupDO groupDO = GroupDO.builder()
+                .name(groupName)
+                .username(username)
+                .sortOrder(0)
+                .gid(gid)
+                .build();
+
+        baseMapper.insert(groupDO);
+    }
+
     /**
      * 新增短链接分组
      * @param groupName 请求参数
      */
     @Override
     public void saveGroup(String groupName) {
-        String gid;
-        do {
-            gid = RandomGenerator.generateRandom();
-        } while (hasGid(gid));
-
-        GroupDO groupDO = GroupDO.builder()
-                .name(groupName)
-                .username(UserContext.getUsername())
-                .sortOrder(0)
-                .gid(gid)
-                .build();
-
-        baseMapper.insert(groupDO);
+        this.saveGroup(UserContext.getUsername(), groupName);
     }
 
     /**
@@ -106,18 +112,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         baseMapper.update(groupDO, queryWrapper);
     }
 
-    /**
-     * 判断是否存在
-     * @param gid
-     * @return 存在返回true, 不存在返回false
-     */
-    private boolean hasGid(String gid){
-        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getName, UserContext.getUsername());
-        return baseMapper.selectOne(queryWrapper) != null;
-    }
-
     @Override
     public void updateGroupSort(List<ShortLinkGroupUpdateSortReqDTO> requestParam) {
         requestParam.forEach(each -> {
@@ -130,5 +124,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                     .eq(GroupDO::getDelFlag, 0);
             baseMapper.update(groupDO, queryWrapper);
         });
+    }
+
+    /**
+     * 判断是否存在
+     * @param username 用户名
+     * @param gid 分组标识
+     * @return 存在返回true, 不存在返回false
+     */
+    private boolean hasGid(String username, String gid){
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getName, Optional.ofNullable(username).orElse(UserContext.getUsername()));
+        return baseMapper.selectOne(queryWrapper) != null;
     }
 }
