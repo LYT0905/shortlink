@@ -17,8 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2024/03/05/12:47
  */
 
+
+/**
+ * 短链接后管控制层
+ */
 @RestController
 public class ShortLinkController {
+
+    // TODO 后续重构为spring cloud远程调用
+
 
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
     };
