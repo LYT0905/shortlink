@@ -1,8 +1,7 @@
 package com.shortlink.controller;
 
 import com.shortlink.common.convention.result.Result;
-import com.shortlink.common.convention.result.Results;
-import com.shortlink.service.UrlTitleService;
+import com.shortlink.remote.dto.ShortLinkRemoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,15 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UrlTitleController {
 
-    private final UrlTitleService urlTitleService;
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
+    };
 
     /**
      * 根据链接获取标题
      * @param url 链接
      * @return 链接标题
      */
-    @GetMapping("/api/short-link/v1/title")
+    @GetMapping("/api/short-link/admin/v1/title")
     public Result<String> getTitleByUrl(@RequestParam("url") String url){
-        return Results.success(urlTitleService.getTitleByUrl(url));
+        return shortLinkRemoteService.getTitleByUrl(url);
     }
 }
