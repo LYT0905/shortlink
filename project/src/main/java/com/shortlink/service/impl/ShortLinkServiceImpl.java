@@ -23,6 +23,7 @@ import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.dto.response.ShortLinkPageRespDTO;
 import com.shortlink.service.ShortLinkService;
 import com.shortlink.toolkit.HashUtil;
+import com.shortlink.toolkit.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -97,6 +98,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
 
         }
+        // 缓存预热
+        stringRedisTemplate.opsForValue().set(
+                fullShortUri,
+                requestParam.getOriginUrl(),
+                LinkUtil.getLinkCacheValidDateTime(requestParam.getValidDate()),
+                TimeUnit.MILLISECONDS
+        );
         shortLinkUriCachePenetrationBloomFilter.add(fullShortUri);
         return ShortLinkCreateRespDTO
                 .builder()
