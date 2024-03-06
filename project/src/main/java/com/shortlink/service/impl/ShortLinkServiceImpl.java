@@ -38,10 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.shortlink.common.constant.RedisKeyConstant.*;
@@ -63,7 +60,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     /**
      * 创建短链接的同时插入到goto表方便定位查找
      * @param requestParam 短链接创建参数
-     * @return
+     * @return ShortLinkCreateRespDTO
      */
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -100,7 +97,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         // 缓存预热
         stringRedisTemplate.opsForValue().set(
-                fullShortUri,
+                String.format(GOTO_SHORT_LINK_KEY, fullShortUri),
                 requestParam.getOriginUrl(),
                 LinkUtil.getLinkCacheValidDateTime(requestParam.getValidDate()),
                 TimeUnit.MILLISECONDS
@@ -139,7 +136,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     /**
      *
      * @param requestParam 分组标识
-     * @return
+     * @return ShortLinkGroupRespDTO
      */
     @Override
     public List<ShortLinkGroupRespDTO> listGroupShortLinkCount(List<String> requestParam) {
@@ -218,12 +215,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 判断布隆过滤器是否存在
         boolean contains = shortLinkUriCachePenetrationBloomFilter.contains(fullShortUrl);
         if(!contains){
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
 
         // 短链接跳转是空值
         String goToIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, fullShortUrl));
         if(StringUtil.isNotBlank(goToIsNullShortLink)){
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
 
@@ -241,7 +240,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoDOWrapper);
             if(shortLinkGotoDO == null){
-                stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
+                stringRedisTemplate.opsForValue()
+                        .set(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
                 return;
             }
             // 到link表查找原始短链接
@@ -252,7 +253,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getGid, shortLinkGotoDO.getGid());
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
             if(shortLinkDO != null){
-                stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl), shortLinkDO.getOriginUrl());
+                // 判断当前短链接是否已经过期
+                if(shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())){
+                    stringRedisTemplate.opsForValue()
+                            .set(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
+                    return;
+                }
+                stringRedisTemplate.opsForValue().set(
+                        String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
+                        shortLinkDO.getOriginUrl(),
+                        LinkUtil.getLinkCacheValidDateTime(shortLinkDO.getValidDate()),
+                        TimeUnit.MILLISECONDS
+                );
                 ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
             }
         }finally {
