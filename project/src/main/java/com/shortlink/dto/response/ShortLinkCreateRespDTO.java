@@ -23,7 +23,7 @@ public class ShortLinkCreateRespDTO {
     /**
      * 短链接
      */
-    private String shortUri;
+    private String fullShortUrl;
 
     /**
      * 原始链接

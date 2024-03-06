@@ -30,6 +30,8 @@
         <guava.version>30.0-jre</guava.version>
     </properties>
 
+
+
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -118,5 +120,22 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

@@ -10,9 +10,12 @@ import com.shortlink.dto.response.ShortLinkCreateRespDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.dto.response.ShortLinkPageRespDTO;
 import com.shortlink.service.ShortLinkService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -65,5 +68,16 @@ public class ShortLinkController {
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam){
         shortLinkService.updateShortLink(requestParam);
         return Results.success();
+    }
+
+    /**
+     * 短链接跳转
+     * @param shortUri 获取跳转的短链接
+     * @param request 请求
+     * @param response 响应
+     */
+    @GetMapping("/{short-uri}")
+    public void restoreUri(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) throws IOException {
+        shortLinkService.restoreUri(shortUri, request, response);
     }
 }
