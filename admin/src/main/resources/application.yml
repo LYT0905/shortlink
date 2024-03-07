@@ -12,3 +12,9 @@ spring:
       port: 6379
       password: root
       database: 1
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: delFlag
+      logic-delete-value: 1
+      logic-not-delete-value: 0

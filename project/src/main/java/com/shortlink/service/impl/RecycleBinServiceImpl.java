@@ -15,7 +15,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.dao.entity.ShortLinkDO;
 import com.shortlink.dao.mapper.RecycleBinMapper;
 import com.shortlink.dto.request.RecycleBinPageReqDTO;
-import com.shortlink.dto.request.RecycleBinRecoverDTO;
+import com.shortlink.dto.request.RecycleBinRecoverReqDTO;
+import com.shortlink.dto.request.RecycleBinRemoveReqDTO;
 import com.shortlink.dto.request.RecycleBinSaveReqDTO;
 import com.shortlink.dto.response.ShortLinkPageRespDTO;
 import com.shortlink.service.RecycleBinService;
@@ -75,8 +76,13 @@ public class RecycleBinServiceImpl extends ServiceImpl<RecycleBinMapper, ShortLi
         );
     }
 
+    /**
+     * 回收站短链接恢复功能
+     * @param requestParam 请求参数
+     * @return void
+     */
     @Override
-    public void recoverShortLinkRecycleBin(RecycleBinRecoverDTO requestParam) {
+    public void recoverShortLinkRecycleBin(RecycleBinRecoverReqDTO requestParam) {
         LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
                 .eq(ShortLinkDO::getEnableStatus, 1)
                 .eq(ShortLinkDO::getDelFlag, 0)
@@ -85,5 +91,20 @@ public class RecycleBinServiceImpl extends ServiceImpl<RecycleBinMapper, ShortLi
         ShortLinkDO shortLinkDO = ShortLinkDO.builder().enableStatus(0).build();
         baseMapper.update(shortLinkDO, updateWrapper);
         stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, requestParam.getFullShortUrl()));
+    }
+
+    /**
+     * 回收站中的短链接删除
+     * @param requestParam 请求参数
+     * @return void
+     */
+    @Override
+    public void removeShortLinkRecycleBin(RecycleBinRemoveReqDTO requestParam) {
+        LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getEnableStatus, 1);
+        baseMapper.delete(updateWrapper);
     }
 }

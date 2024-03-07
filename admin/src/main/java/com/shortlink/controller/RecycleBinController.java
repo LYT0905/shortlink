@@ -11,15 +11,13 @@ import com.shortlink.common.convention.result.Result;
 import com.shortlink.common.convention.result.Results;
 import com.shortlink.remote.dto.ShortLinkRemoteService;
 import com.shortlink.remote.dto.request.RecycleBinPageReqDTO;
-import com.shortlink.remote.dto.request.RecycleBinRecoverDTO;
+import com.shortlink.remote.dto.request.RecycleBinRecoverReqDTO;
+import com.shortlink.remote.dto.request.RecycleBinRemoveReqDTO;
 import com.shortlink.remote.dto.request.RecycleBinSaveReqDTO;
 import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
 import com.shortlink.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 短链接回收站
@@ -62,8 +60,19 @@ public class RecycleBinController {
      * @return void
      */
     @PostMapping("/api/short-link/admin/v1/recycle-bin/recover")
-    public Result<Void> recover(@RequestBody RecycleBinRecoverDTO requestParam){
+    public Result<Void> recover(@RequestBody RecycleBinRecoverReqDTO requestParam){
         shortLinkRemoteService.recoverShortLinkRecycleBin(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 回收站中的短链接删除
+     * @param requestParam 请求参数
+     * @return void
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/remove")
+    public Result<Void> remove(@RequestBody RecycleBinRemoveReqDTO requestParam){
+        shortLinkRemoteService.removeShortLinkRecycleBin(requestParam);
         return Results.success();
     }
 }
