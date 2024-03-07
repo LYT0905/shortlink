@@ -3,6 +3,8 @@ package com.shortlink.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -30,6 +32,8 @@ import com.shortlink.toolkit.HashUtil;
 import com.shortlink.toolkit.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jodd.util.StringUtil;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +55,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.shortlink.common.constant.RedisKeyConstant.*;
 
@@ -296,7 +301,31 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      * @param response 响应
      */
     public void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response){
+        AtomicBoolean uvFirstFlag = new AtomicBoolean();
+        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
+        // 设置cookies
         try{
+            Runnable addCookiesForResponse = () -> {
+                String uv = UUID.randomUUID().toString();
+                Cookie uvCookie = new Cookie("uv", uv);
+                uvCookie.setMaxAge(60 * 60 * 24 * 30);
+                uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.lastIndexOf("/"), fullShortUrl.length()));
+                ((HttpServletResponse) response).addCookie(uvCookie);
+                uvFirstFlag.set(Boolean.TRUE);
+                stringRedisTemplate.opsForSet().add("short-link_stats-uv:" + fullShortUrl, uv);
+            };
+            if(ArrayUtil.isNotEmpty(cookies)){
+                Arrays.stream(cookies)
+                        .filter((each) -> Objects.equals(each.getName(), "uv"))
+                        .findFirst()
+                        .map(Cookie::getName)
+                        .ifPresentOrElse((each) -> {
+                            Long added = stringRedisTemplate.opsForSet().add("short-link_stats-uv:" + fullShortUrl, each);
+                            uvFirstFlag.set(added != null && added > 0L);
+                        }, addCookiesForResponse);
+            }else {
+                addCookiesForResponse.run();
+            }
             if(StringUtil.isBlank(gid)){
                 LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
                         .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
@@ -312,7 +341,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
-                    .uv(1)
+                    .uv(uvFirstFlag.get() ? 1 : 0)
                     .uip(1)
                     .hour(hour)
                     .weekday(weekValue)
@@ -320,7 +349,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .gid(gid)
                     .date(date)
                     .build();
-            linkAccessStatsMapper.insert(linkAccessStatsDO);
+            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
         }catch (Exception ex){
             log.info("短链接数据统计出错", ex);
         }
