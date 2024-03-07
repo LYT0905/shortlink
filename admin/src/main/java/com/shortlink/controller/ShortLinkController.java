@@ -56,9 +56,6 @@ public class ShortLinkController {
      * 修改短链接
      * @param requestParam 修改短链接请求参数
      * @return void
-     * "validDateType": 1,
-     *     "validDate": "2024-03-04 21:22:01",
-     *     "describe": "string"
      */
     @PostMapping("/api/short-link/admin/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam){
