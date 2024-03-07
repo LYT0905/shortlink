@@ -8,7 +8,7 @@ import lombok.Data;
  */
 
 @Data
-public class RecycleBinRecoverDTO {
+public class RecycleBinRecoverReqDTO {
     /**
      * 分组标识
      */
