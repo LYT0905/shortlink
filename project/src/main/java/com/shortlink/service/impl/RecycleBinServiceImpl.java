@@ -6,12 +6,17 @@ package com.shortlink.service.impl;
  */
 
 
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.dao.entity.ShortLinkDO;
 import com.shortlink.dao.mapper.RecycleBinMapper;
+import com.shortlink.dto.request.RecycleBinPageReqDTO;
 import com.shortlink.dto.request.RecycleBinSaveReqDTO;
+import com.shortlink.dto.response.ShortLinkPageRespDTO;
 import com.shortlink.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -44,5 +49,27 @@ public class RecycleBinServiceImpl extends ServiceImpl<RecycleBinMapper, ShortLi
         baseMapper.update(shortLinkDO, updateWrapper);
         // 将缓存数据删掉
         stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+    }
+
+    /**
+     * 回收站短链接分页查询
+     * @param requestParam 短链接分页查询参数
+     * @return 短链接分页查询返回结果
+     */
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(RecycleBinPageReqDTO requestParam) {
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .in(ShortLinkDO::getGid, requestParam.getGidList())
+                .eq(ShortLinkDO::getEnableStatus, 1)
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .orderByDesc(ShortLinkDO::getUpdateTime);
+        IPage<ShortLinkDO> result = baseMapper.selectPage(requestParam, queryWrapper);
+        return result.convert((each) ->
+                {
+                    ShortLinkPageRespDTO resultPage = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
+                    resultPage.setDomain("http://" + resultPage.getDomain());
+                    return resultPage;
+                }
+        );
     }
 }
