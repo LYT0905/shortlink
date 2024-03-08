@@ -5,6 +5,7 @@ package com.shortlink.remote.dto;
  * @date 2024/03/05/12:41
  */
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
@@ -14,6 +15,7 @@ import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.remote.dto.request.*;
 import com.shortlink.remote.dto.response.ShortLinkCreateRespDTO;
 import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
+import com.shortlink.remote.dto.response.ShortLinkStatsRespDTO;
 
 import java.util.HashMap;
 import java.util.List;
@@ -124,5 +126,11 @@ public interface ShortLinkRemoteService {
      */
     default void removeShortLinkRecycleBin(RecycleBinRemoveReqDTO requestParam){
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/remove", JSON.toJSONString(requestParam));
+    }
+
+    default  Result<ShortLinkStatsRespDTO> oneShortLinkStats(ShortLinkStatsReqDTO requestParam){
+        String resultBodyStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats", BeanUtil.beanToMap(requestParam));
+        return JSON.parseObject(resultBodyStr, new TypeReference<>() {
+        });
     }
 }
