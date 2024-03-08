@@ -18,14 +18,8 @@ import com.shortlink.common.convention.exception.ClientException;
 import com.shortlink.common.convention.exception.ServiceException;
 import com.shortlink.common.enums.ShortLinkErrorCodeEnums;
 import com.shortlink.common.enums.VailDateTypeEnum;
-import com.shortlink.dao.entity.LinkAccessStatsDO;
-import com.shortlink.dao.entity.LinkLocaleStatsDO;
-import com.shortlink.dao.entity.ShortLinkDO;
-import com.shortlink.dao.entity.ShortLinkGotoDO;
-import com.shortlink.dao.mapper.LinkAccessStatsMapper;
-import com.shortlink.dao.mapper.LinkLocaleStatsMapper;
-import com.shortlink.dao.mapper.ShortLinkGotoMapper;
-import com.shortlink.dao.mapper.ShortLinkMapper;
+import com.shortlink.dao.entity.*;
+import com.shortlink.dao.mapper.*;
 import com.shortlink.dto.request.ShortLinkCreateReqDTO;
 import com.shortlink.dto.request.ShortLinkPageReqDTO;
 import com.shortlink.dto.request.ShortLinkUpdateReqDTO;
@@ -82,6 +76,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
@@ -389,6 +384,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .city(unknownFlag ? "未知" : localeResultObject.getString("city"))
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStats);
+
+                // 插入操作系统消息
+                LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                        .cnt(1)
+                        .os(LinkUtil.getOs((HttpServletRequest) request))
+                        .date(date)
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .build();
+                linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
             }
         }catch (Exception ex){
             log.info("短链接数据统计出错", ex);
