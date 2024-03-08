@@ -5,6 +5,9 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -16,9 +19,11 @@ import com.shortlink.common.convention.exception.ServiceException;
 import com.shortlink.common.enums.ShortLinkErrorCodeEnums;
 import com.shortlink.common.enums.VailDateTypeEnum;
 import com.shortlink.dao.entity.LinkAccessStatsDO;
+import com.shortlink.dao.entity.LinkLocaleStatsDO;
 import com.shortlink.dao.entity.ShortLinkDO;
 import com.shortlink.dao.entity.ShortLinkGotoDO;
 import com.shortlink.dao.mapper.LinkAccessStatsMapper;
+import com.shortlink.dao.mapper.LinkLocaleStatsMapper;
 import com.shortlink.dao.mapper.ShortLinkGotoMapper;
 import com.shortlink.dao.mapper.ShortLinkMapper;
 import com.shortlink.dto.request.ShortLinkCreateReqDTO;
@@ -45,6 +50,7 @@ import org.jsoup.nodes.Element;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -58,6 +64,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.shortlink.common.constant.RedisKeyConstant.*;
+import static com.shortlink.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 
 /**
  * @author LYT0905
@@ -74,6 +81,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLocaleAmapKey;
 
     /**
      * 创建短链接的同时插入到goto表方便定位查找
@@ -326,7 +337,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }else {
                 addCookiesForResponse.run();
             }
-
+            // 短链接基础数据统计
             String actualIp = LinkUtil.getActualIp((HttpServletRequest)request);
             Long uipAdded = stringRedisTemplate.opsForSet().add("short-link-stats-uip:" + fullShortUrl, actualIp);
             boolean uipFirstFlag = (uipAdded != null && uipAdded > 0L);
@@ -355,6 +366,30 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(date)
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+
+            // 调取高德地图接口(短链接地区数据统计)
+            Map<String, Object> map = new HashMap<>();
+            map.put("key", statsLocaleAmapKey);
+            map.put("ip", actualIp);
+            String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, map);
+            JSONObject localeResultObject = JSON.parseObject(localeResultStr);
+            String  infocode = localeResultObject.getString("infocode");
+            // 插入地区统计数据
+            if(StringUtil.isNotBlank(infocode) && Objects.equals(infocode, "10000")){
+                String province = localeResultObject.getString("province");
+                boolean unknownFlag = StringUtil.equals(province, "[]");
+                LinkLocaleStatsDO linkLocaleStats = LinkLocaleStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(date)
+                        .country("中国")
+                        .province(unknownFlag ? "未知" : province)
+                        .cnt(1)
+                        .adcode(unknownFlag ? "未知" : localeResultObject.getString("adcode"))
+                        .city(unknownFlag ? "未知" : localeResultObject.getString("city"))
+                        .build();
+                linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStats);
+            }
         }catch (Exception ex){
             log.info("短链接数据统计出错", ex);
         }
