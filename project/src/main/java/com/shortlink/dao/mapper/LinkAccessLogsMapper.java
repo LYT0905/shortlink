@@ -7,6 +7,7 @@ package com.shortlink.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shortlink.dao.entity.LinkAccessLogsDO;
+import com.shortlink.dao.entity.SelectUvTypeByUsersDO;
 import com.shortlink.dto.request.ShortLinkStatsReqDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -14,6 +15,7 @@ import org.apache.ibatis.annotations.Select;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 访问日志监控持久层
@@ -58,4 +60,29 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "        user " +
             ") AS user_counts;")
     HashMap<String, Object> findUvTypeCntByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
+
+    /**
+     * 获取用户信息是否新老访客
+     */
+    @Select("<script> " +
+            "SELECT " +
+            "    user, " +
+            "    CASE " +
+            "        WHEN MIN(create_time) BETWEEN #{param.startDate} AND #{param.endDate} THEN '新访客' " +
+            "        ELSE '老访客' " +
+            "    END AS uvType " +
+            "FROM " +
+            "    t_link_access_logs " +
+            "WHERE " +
+            "    full_short_url = #{param.fullShortUrl} " +
+            "    AND gid = #{param.gid} " +
+            "    AND user IN " +
+            "    <foreach item='item' index='index' collection= '#{param.userAccessLogsList}' open='(' separator=',' close=')'> " +
+            "        #{item} " +
+            "    </foreach> " +
+            "GROUP BY " +
+            "    user;" +
+            "    </script>"
+    )
+    List<Map<String, Object>> selectUvTypeByUsers(@Param("param") SelectUvTypeByUsersDO uvTypeByUsersDO);
 }

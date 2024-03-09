@@ -5,9 +5,12 @@ package com.shortlink.controller;
  * @date 2024/03/08/20:13
  */
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.common.convention.result.Results;
+import com.shortlink.dto.request.ShortLinkStatsAccessRecordReqDTO;
 import com.shortlink.dto.request.ShortLinkStatsReqDTO;
+import com.shortlink.dto.response.ShortLinkStatsAccessRecordRespDTO;
 import com.shortlink.dto.response.ShortLinkStatsRespDTO;
 import com.shortlink.service.ShortLinkStatsService;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +32,13 @@ public class ShortLinkStatsController {
     @GetMapping("/api/short-link/v1/stats")
     public Result<ShortLinkStatsRespDTO> stats(ShortLinkStatsReqDTO requestParam){
         return Results.success(shortLinkStatsService.oneShortLinkStats(requestParam));
+    }
+
+    /**
+     * 访问单个短链接指定时间内访问记录监控数据
+     */
+    @GetMapping("/api/short-link/v1/stats/access-record")
+    public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        return Results.success(shortLinkStatsService.shortLinkStatsAccessRecord(requestParam));
     }
 }

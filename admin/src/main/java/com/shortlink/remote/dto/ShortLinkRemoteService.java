@@ -15,6 +15,7 @@ import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.remote.dto.request.*;
 import com.shortlink.remote.dto.response.ShortLinkCreateRespDTO;
 import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
+import com.shortlink.remote.dto.response.ShortLinkStatsAccessRecordRespDTO;
 import com.shortlink.remote.dto.response.ShortLinkStatsRespDTO;
 
 import java.util.HashMap;
@@ -130,6 +131,18 @@ public interface ShortLinkRemoteService {
 
     default  Result<ShortLinkStatsRespDTO> oneShortLinkStats(ShortLinkStatsReqDTO requestParam){
         String resultBodyStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats", BeanUtil.beanToMap(requestParam));
+        return JSON.parseObject(resultBodyStr, new TypeReference<>() {
+        });
+    }
+
+    /**
+     * 访问单个短链接指定时间内访问记录监控数据
+     */
+    default Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam){
+        Map<String, Object> map = BeanUtil.beanToMap(requestParam, false, true);
+        map.remove("records");
+        map.remove("orders");
+        String resultBodyStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats/access-record", map);
         return JSON.parseObject(resultBodyStr, new TypeReference<>() {
         });
     }
