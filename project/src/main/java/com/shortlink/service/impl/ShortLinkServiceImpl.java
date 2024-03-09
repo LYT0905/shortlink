@@ -107,6 +107,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .shortUri(shortLinkSuffix)
                 .favicon(getFavicon(requestParam.getOriginUrl()))
                 .enableStatus(0)
+                .totalPv(0)
+                .totalUip(0)
+                .totalUv(0)
                 .fullShortUrl(fullShortUri)
                 .build();
 
@@ -452,6 +455,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .user(uv.get())
                         .build();
                 linkAccessLogsMapper.insert(linkAccessLogsDO);
+
+                // 短链接访问统计自增
+                baseMapper.incrementStats(gid, fullShortUrl, 1,
+                        uvFirstFlag.get() ? 1 : 0, uipFirstFlag ? 1 : 0);
             }
         }catch (Exception ex){
             log.info("短链接数据统计出错", ex);

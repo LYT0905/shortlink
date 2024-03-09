@@ -57,6 +57,11 @@ public class ShortLinkDO extends BaseDO {
     private String gid;
 
     /**
+     * 网站图标
+     */
+    private String favicon;
+
+    /**
      * 启用标识 0：启用 1：未启用
      */
     private int enableStatus;
@@ -83,7 +88,17 @@ public class ShortLinkDO extends BaseDO {
     private String describe;
 
     /**
-     * 网络图标
+     * 历史pv
      */
-    private String favicon;
+    private Integer totalPv;
+
+    /**
+     * 历史uv
+     */
+    private Integer totalUv;
+
+    /**
+     * 历史uip
+     */
+    private Integer totalUip;
 }
