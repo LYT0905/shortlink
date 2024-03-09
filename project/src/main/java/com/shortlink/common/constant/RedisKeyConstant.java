@@ -24,4 +24,14 @@ public class RedisKeyConstant {
      * 短链接跳转锁前缀
      */
     public final static String LOCK_GOTO_SHORT_LINK_KEY = "short-link_lock_goto_%s";
+
+    /**
+     * 今日用户访问数据前缀
+     */
+    public final static String TODAY_SHORT_LINK_UV = "short-link:stats:uv:";
+
+    /**
+     * 今日用户访问ip数据前缀
+     */
+    public final static String TODAY_SHORT_LINK_UIP = "short-link:stats:uip:";
 }

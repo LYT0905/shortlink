@@ -54,6 +54,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -83,6 +84,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
@@ -459,6 +461,40 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 // 短链接访问统计自增
                 baseMapper.incrementStats(gid, fullShortUrl, 1,
                         uvFirstFlag.get() ? 1 : 0, uipFirstFlag ? 1 : 0);
+
+                // 获取当前日期
+                LocalDateTime currentDateTime = LocalDateTime.now();
+                // 设定时间为当天的23:59:59
+                LocalDateTime endOfDay = currentDateTime.with(LocalTime.MAX);
+                // 转换为ZonedDateTime以获取时区信息
+                ZonedDateTime zonedDateTime = endOfDay.atZone(ZoneId.systemDefault());
+                // 转换为时间戳（毫秒）
+                long timestamp = zonedDateTime.toInstant().toEpochMilli();
+
+                // 记录今日统计监控数据
+                Long todayUvAdded = stringRedisTemplate.opsForSet().add(TODAY_SHORT_LINK_UV +
+                        DateUtil.formatDate(date) + ":" + fullShortUrl, uv.get());
+                boolean todayUvFlag = todayUvAdded != null && todayUvAdded > 0L;
+                // 设置一天的过期时间
+                stringRedisTemplate.expire(TODAY_SHORT_LINK_UV +
+                        DateUtil.formatDate(date) + ":" + fullShortUrl, timestamp, TimeUnit.MILLISECONDS);
+
+                Long todayUIpAdded = stringRedisTemplate.opsForSet().add(TODAY_SHORT_LINK_UIP + DateUtil.formatDate(date) + ":"
+                        + fullShortUrl, actualIp);
+                boolean todayUIpFlag = todayUIpAdded != null && todayUIpAdded > 0L;
+                // 设置一天的过期时间127
+                stringRedisTemplate.expire(TODAY_SHORT_LINK_UIP + DateUtil.formatDate(date) + ":"
+                        + fullShortUrl, timestamp, TimeUnit.MILLISECONDS);
+
+                LinkStatsTodayDO linkStatsTodayDO = LinkStatsTodayDO.builder()
+                        .todayPv(1)
+                        .todayUv(todayUvFlag ? 1 : 0)
+                        .todayUip(todayUIpFlag ? 1 : 0)
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(date)
+                        .build();
+                linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);
             }
         }catch (Exception ex){
             log.info("短链接数据统计出错", ex);
