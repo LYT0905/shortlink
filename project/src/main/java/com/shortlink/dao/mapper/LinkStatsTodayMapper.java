@@ -2,9 +2,9 @@ package com.shortlink.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shortlink.dao.entity.LinkStatsTodayDO;
-import io.lettuce.core.dynamic.annotation.Param;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author LYT0905
