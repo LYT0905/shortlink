@@ -1,7 +1,9 @@
 package com.shortlink.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shortlink.dao.entity.ShortLinkDO;
+import com.shortlink.dto.request.ShortLinkPageReqDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -27,4 +29,9 @@ public interface ShortLinkMapper extends BaseMapper<ShortLinkDO> {
             @Param("totalUv") Integer totalUv,
             @Param("totalUip") Integer totalUip
     );
+
+    /**
+     * 分页统计短链接
+     */
+    IPage<ShortLinkDO>  pageLink(ShortLinkPageReqDTO requestParam);
 }

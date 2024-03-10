@@ -79,7 +79,7 @@ public class ShortLinkPageRespDTO {
     /**
      * 今日Pv
      */
-    private String toDayPv;
+    private String todayPv;
 
     /**
      * 历史Uv
@@ -89,15 +89,15 @@ public class ShortLinkPageRespDTO {
     /**
      * 今日Uv
      */
-    private String toDayUv;
+    private String todayUv;
 
     /**
      * 历史UIp
      */
-    private String totalUIp;
+    private String totalUip;
 
     /**
      * 今日UIp
      */
-    private String toDayUIp;
+    private String toDayUip;
 }

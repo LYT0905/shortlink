@@ -85,4 +85,5 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "    </script>"
     )
     List<Map<String, Object>> selectUvTypeByUsers(@Param("param") SelectUvTypeByUsersDO uvTypeByUsersDO);
+
 }

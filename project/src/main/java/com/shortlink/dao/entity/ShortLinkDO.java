@@ -90,15 +90,18 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 历史pv
      */
+    @TableField(exist = false)
     private Integer totalPv;
 
     /**
      * 历史uv
      */
+    @TableField(exist = false)
     private Integer totalUv;
 
     /**
      * 历史uip
      */
+    @TableField(exist = false)
     private Integer totalUip;
 }
