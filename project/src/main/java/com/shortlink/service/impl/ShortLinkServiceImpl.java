@@ -247,17 +247,38 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .validDateType(requestParam.getValidDateType())
                 .build();
 
-        LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
-                .eq(ShortLinkDO::getDelFlag, 0)
-                .eq(ShortLinkDO::getGid, requestParam.getGid())
-                .eq(ShortLinkDO::getEnableStatus, 0)
-                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
-                .set(Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()),
-                        ShortLinkDO::getValidDate, null);
-        if (!Objects.equals(hasShortLink.getGid(), requestParam.getGid())) {
+        // 判断是否修改同一分组下的短链接，如果不是则要删除原来的短链接，因为分表是根据gid分的，如果不删除，那么将找不到数据，反之更新
+        if (Objects.equals(hasShortLink.getGid(), requestParam.getGid())) {
+            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getGid, requestParam.getGid())
+                    .eq(ShortLinkDO::getEnableStatus, 0)
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                    .set(Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()),
+                            ShortLinkDO::getValidDate, null);
+            baseMapper.update(shortLinkDO, updateWrapper);
+        }else {
+            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getGid, requestParam.getGid())
+                    .eq(ShortLinkDO::getEnableStatus, 0)
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl());
             baseMapper.delete(updateWrapper);
+            baseMapper.insert(shortLinkDO);
         }
-        baseMapper.update(shortLinkDO, updateWrapper);
+        // 判断过了有效期
+        if (!Objects.equals(hasShortLink.getValidDateType(), requestParam.getValidDateType())
+                || !Objects.equals(hasShortLink.getValidDate(), requestParam.getValidDate())) {
+            stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+            // 如果是有有效期，并且已经过期了，缓存中才有is_null的key
+            if (hasShortLink.getValidDate() != null && hasShortLink.getValidDate().before(new Date())){
+                // 如果修改为永久有效或者是合法有效期
+                if (Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()) ||
+                        requestParam.getValidDate().after(new Date())){
+                    stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, requestParam.getFullShortUrl()));
+                }
+            }
+        }
     }
 
     /**
