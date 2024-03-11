@@ -1,4 +1,4 @@
-package com.shortlink.dao.entity;
+package com.shortlink.dto.biz;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,18 +9,27 @@ import java.util.List;
 
 /**
  * @author LYT0905
- * @date 2024/03/10/17:16
+ * @date 2024/03/09/13:17
  */
 
+/**
+ * 查找单个用户的类型（新访客还是旧访客）实体
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SelectGroupUvTypeDO {
+public class SelectUvTypeByUsersDO {
+
     /**
      * 分组标识
      */
     private String gid;
+
+    /**
+     * 完整短链接
+     */
+    private String fullShortUrl;
 
     /**
      * 开始时间
