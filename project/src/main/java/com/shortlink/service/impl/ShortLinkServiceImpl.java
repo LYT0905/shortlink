@@ -150,13 +150,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     /**
-     * 批量创建短链接
+     * 批量创建短链接（批量其实就是批量插入原始链接和描述）
      * @param requestParam 请求创建参数
      * @return 返回参数
      */
     @Override
     public ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
+        // 获取原始链接
         List<String> originUrls = requestParam.getOriginUrls();
+        // 获取描述
         List<String> describes = requestParam.getDescribes();
         List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
         for (int i = 0; i < originUrls.size(); i++){
