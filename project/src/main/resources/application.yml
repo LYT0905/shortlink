@@ -26,6 +26,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mapper-locations: classpath:mapper/*.xml
 short-link:
+  domain:
+    default: nurl.ink:8001
   stats:
     locale:
       amap-key: d3ad4136556b3eba36b76f4e32eeb713

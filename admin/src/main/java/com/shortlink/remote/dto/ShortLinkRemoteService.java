@@ -13,10 +13,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.remote.dto.request.*;
-import com.shortlink.remote.dto.response.ShortLinkCreateRespDTO;
-import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
-import com.shortlink.remote.dto.response.ShortLinkStatsAccessRecordRespDTO;
-import com.shortlink.remote.dto.response.ShortLinkStatsRespDTO;
+import com.shortlink.remote.dto.response.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -172,4 +169,14 @@ public interface ShortLinkRemoteService {
         });
     }
 
+    /**
+     * 批量创建短链接
+     * @param requestParam 批量创建短链接请求参数
+     * @return 短链接批量创建响应
+     */
+    default Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam){
+        String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/create/batch", JSON.toJSONString(requestParam));
+        return JSON.parseObject(resultBodyStr, new TypeReference<>() {
+        });
+    }
 }

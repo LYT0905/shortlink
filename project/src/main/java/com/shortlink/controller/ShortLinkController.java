@@ -3,9 +3,11 @@ package com.shortlink.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.common.convention.result.Results;
+import com.shortlink.dto.request.ShortLinkBatchCreateReqDTO;
 import com.shortlink.dto.request.ShortLinkCreateReqDTO;
 import com.shortlink.dto.request.ShortLinkPageReqDTO;
 import com.shortlink.dto.request.ShortLinkUpdateReqDTO;
+import com.shortlink.dto.response.ShortLinkBatchCreateRespDTO;
 import com.shortlink.dto.response.ShortLinkCreateRespDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.dto.response.ShortLinkPageRespDTO;
@@ -37,6 +39,14 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/v1/create")
     public Result<ShortLinkCreateRespDTO> create(@RequestBody ShortLinkCreateReqDTO requestParam){
         return Results.success(shortLinkService.createShortLink(requestParam));
+    }
+
+    /**
+     * 批量创建短链接
+     */
+    @PostMapping("/api/short-link/v1/create/batch")
+    public Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
+        return Results.success(shortLinkService.batchCreateShortLink(requestParam));
     }
 
     /**

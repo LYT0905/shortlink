@@ -21,12 +21,11 @@ import com.shortlink.common.enums.ShortLinkErrorCodeEnums;
 import com.shortlink.common.enums.VailDateTypeEnum;
 import com.shortlink.dao.entity.*;
 import com.shortlink.dao.mapper.*;
+import com.shortlink.dto.request.ShortLinkBatchCreateReqDTO;
 import com.shortlink.dto.request.ShortLinkCreateReqDTO;
 import com.shortlink.dto.request.ShortLinkPageReqDTO;
 import com.shortlink.dto.request.ShortLinkUpdateReqDTO;
-import com.shortlink.dto.response.ShortLinkCreateRespDTO;
-import com.shortlink.dto.response.ShortLinkGroupRespDTO;
-import com.shortlink.dto.response.ShortLinkPageRespDTO;
+import com.shortlink.dto.response.*;
 import com.shortlink.service.ShortLinkService;
 import com.shortlink.toolkit.HashUtil;
 import com.shortlink.toolkit.LinkUtil;
@@ -89,6 +88,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
 
+    @Value("${short-link.domain.default}")
+    private String createShortLinkDefaultDomain;
+
     /**
      * 创建短链接的同时插入到goto表方便定位查找
      * @param requestParam 短链接创建参数
@@ -97,9 +99,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         String shortLinkSuffix = generateSuffix(requestParam);
-        String fullShortUri = requestParam.getDomain() + "/" + shortLinkSuffix;
+        String fullShortUri = createShortLinkDefaultDomain + "/" + shortLinkSuffix;
         ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                .domain(requestParam.getDomain())
+                .domain(createShortLinkDefaultDomain)
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .createdType(requestParam.getCreatedType())
@@ -144,6 +146,38 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .fullShortUrl("http://" + shortLinkDO.getFullShortUrl())
                 .gid(requestParam.getGid())
                 .originUrl(requestParam.getOriginUrl())
+                .build();
+    }
+
+    /**
+     * 批量创建短链接
+     * @param requestParam 请求创建参数
+     * @return 返回参数
+     */
+    @Override
+    public ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
+        List<String> originUrls = requestParam.getOriginUrls();
+        List<String> describes = requestParam.getDescribes();
+        List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
+        for (int i = 0; i < originUrls.size(); i++){
+            ShortLinkCreateReqDTO shortLinkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLinkCreateReqDTO.class);
+            shortLinkCreateReqDTO.setOriginUrl(originUrls.get(i));
+            shortLinkCreateReqDTO.setDescribe(describes.get(i));
+            try{
+                ShortLinkCreateRespDTO shortLink = createShortLink(shortLinkCreateReqDTO);
+                ShortLinkBaseInfoRespDTO shortLinkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()
+                        .fullShortUrl(shortLink.getFullShortUrl())
+                        .originUrl(shortLink.getFullShortUrl())
+                        .describe(describes.get(i))
+                        .build();
+                result.add(shortLinkBaseInfoRespDTO);
+            } catch (Throwable ex) {
+                log.error("批量创建短链接失败，原始参数：{}", originUrls.get(i));
+            }
+        }
+        return ShortLinkBatchCreateRespDTO.builder()
+                .total(result.size())
+                .baseLinkInfos(result)
                 .build();
     }
 
@@ -233,7 +267,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     public void restoreUri(String shortUri, ServletRequest request, ServletResponse response) throws IOException {
         String serverName = request.getServerName();
-        String fullShortUrl = serverName + "/" + shortUri;
+
+        String serverPort = Optional.of(request.getServerPort())
+                .filter(each -> !Objects.equals(each, "80"))
+                .map(String::valueOf)
+                .map(each -> ":" + each)
+                .orElse("");
+
+        String fullShortUrl = serverName + serverPort + "/" + shortUri;
 
         String originalUrl = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if(StringUtil.isNotBlank(originalUrl)){
