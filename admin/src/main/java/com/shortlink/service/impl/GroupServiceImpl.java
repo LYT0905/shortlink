@@ -1,10 +1,12 @@
 package com.shortlink.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shortlink.common.biz.user.UserContext;
+import com.shortlink.common.convention.exception.ClientException;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.dao.entity.GroupDO;
 import com.shortlink.dao.mapper.GroupMapper;
@@ -14,6 +16,10 @@ import com.shortlink.dto.response.ShortLinkGroupRespDTO;
 import com.shortlink.remote.dto.ShortLinkRemoteService;
 import com.shortlink.service.GroupService;
 import com.shortlink.toolkit.RandomGenerator;
+import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,32 +27,56 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.shortlink.common.constant.RedisCacheConstant.LOCK_GROUP_CREATE_KEY;
+
 /**
  * @author LYT0905
  * @date 2024/03/01/16:05
  */
 
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {};
+    private final RedissonClient redissonClient;
 
+    @Value("${short-link.group.max-num}")
+    private Integer groupMaxNum;
 
+    /**
+     * 添加分组
+     * @param username 用户名
+     * @param groupName 请求参数
+     */
     @Override
     public void saveGroup(String username, String groupName) {
-        String gid;
-        do {
-            gid = RandomGenerator.generateRandom();
-        } while (hasGid(username, gid));
+        RLock lock = redissonClient.getLock(LOCK_GROUP_CREATE_KEY + username);
+        lock.lock();
+        try {
+            LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                    .eq(GroupDO::getUsername, username)
+                    .eq(GroupDO::getDelFlag, 0);
+            List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+            if (CollUtil.isNotEmpty(groupDOList) && groupDOList.size() == groupMaxNum){
+                throw new ClientException("用户已达可创建最大分组数");
+            }
+            String gid;
+            do {
+                gid = RandomGenerator.generateRandom();
+            } while (hasGid(username, gid));
 
-        GroupDO groupDO = GroupDO.builder()
-                .name(groupName)
-                .username(username)
-                .sortOrder(0)
-                .gid(gid)
-                .build();
+            GroupDO groupDO = GroupDO.builder()
+                    .name(groupName)
+                    .username(username)
+                    .sortOrder(0)
+                    .gid(gid)
+                    .build();
 
-        baseMapper.insert(groupDO);
+            baseMapper.insert(groupDO);
+        }finally {
+            lock.unlock();
+        }
     }
 
     /**
