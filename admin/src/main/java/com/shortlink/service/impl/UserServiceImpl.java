@@ -6,6 +6,7 @@ package com.shortlink.service.impl;
  */
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -31,6 +32,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -138,10 +140,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if(userDO == null){
             throw new ClientException(USER_LOGIN_ERROR);
         }
-        // 判断是否已经登录
-        Boolean hasLogin = stringRedisTemplate.hasKey("login_" + requestParam.getUsername());
-        if(hasLogin != null && hasLogin){
-            throw new ClientException(USER_HAS_LOGIN);
+        // 如果已经登录，直接返回token(避免之前只能在一个地方登录的问题)
+        Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries("login_" + requestParam.getUsername());
+        if(CollUtil.isNotEmpty(hasLoginMap)){
+            String token = hasLoginMap.keySet().stream().findFirst().map(Object::toString)
+                    .orElseThrow(() -> new ClientException("用户登录信息错误"));
+            return new UserLoginRespDTO(token);
         }
         /**
          * 防止重复提交登录导致接口压力过大
