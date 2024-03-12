@@ -1,6 +1,7 @@
 package com.shortlink.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.shortlink.common.datatbase.BaseDO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +19,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("t_link_browser_stats")
-public class LinkBrowserStatsDO {
+public class LinkBrowserStatsDO extends BaseDO {
 
     /**
      * id

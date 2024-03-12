@@ -104,7 +104,13 @@ public class RecycleBinServiceImpl extends ServiceImpl<RecycleBinMapper, ShortLi
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
                 .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                 .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getDelTime, 0L)
                 .eq(ShortLinkDO::getEnableStatus, 1);
-        baseMapper.delete(updateWrapper);
+        // link表中增加了del_time字段的唯一索引，避免以前只根据full_short_url可能会造成索引冲突的问题
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .delTime(System.currentTimeMillis())
+                .build();
+        shortLinkDO.setDelFlag(1);
+        baseMapper.update(shortLinkDO, updateWrapper);
     }
 }

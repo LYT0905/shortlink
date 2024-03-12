@@ -16,6 +16,16 @@ spring:
       password: root
       host: 192.168.6.102
       port: 6379
+  rabbitmq:
+    password: 123
+    username: admin
+    port: 5672
+    host: 192.168.6.102
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    mvc:
+      pathmatch:
+        matching-strategy: ant_path_matcher
 mybatis-plus:
   global-config:
     db-config:

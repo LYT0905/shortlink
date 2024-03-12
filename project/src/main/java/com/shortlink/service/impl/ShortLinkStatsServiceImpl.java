@@ -10,6 +10,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.shortlink.dao.entity.*;
 import com.shortlink.dao.mapper.*;
+import com.shortlink.dto.biz.SelectGroupUvTypeDO;
+import com.shortlink.dto.biz.SelectUvTypeByUsersDO;
 import com.shortlink.dto.request.ShortLinkGroupStatsAccessRecordReqDTO;
 import com.shortlink.dto.request.ShortLinkGroupStatsReqDTO;
 import com.shortlink.dto.request.ShortLinkStatsAccessRecordReqDTO;

@@ -34,4 +34,14 @@ public class RedisKeyConstant {
      * 今日用户访问ip数据前缀
      */
     public final static String TODAY_SHORT_LINK_UIP = "short-link:stats:uip:";
+
+    /**
+     * 短链接修改分组 ID 锁前缀 Key
+     */
+    public static final String LOCK_GID_UPDATE_KEY = "short-link_lock_update-gid_%s";
+
+    /**
+     * 短链接延迟队列消费统计 Key
+     */
+    public static final String DELAY_QUEUE_STATS_KEY = "short-link_delay-queue:stats";
 }
