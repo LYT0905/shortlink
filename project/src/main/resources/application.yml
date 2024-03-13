@@ -38,6 +38,9 @@ mybatis-plus:
 short-link:
   domain:
     default: nurl.ink:8001
+  channel-topic:
+    short-link-stats: 'short_link:stats-stream'
+    short-link-stats-group: 'short_link:stats-stream:only-group'
   stats:
     locale:
       amap-key: d3ad4136556b3eba36b76f4e32eeb713
