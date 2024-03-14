@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
 
+import static com.shortlink.common.constant.RedisCacheConstant.USER_LOGIN_KEY;
 import static com.shortlink.common.enums.UserErrorCodeEnums.USER_TOKEN_FAILURE;
 
 /**
@@ -49,7 +50,7 @@ public class UserTransmitFilter implements Filter {
                 }
                 Object userInfoJson;
                 try{
-                    userInfoJson = stringRedisTemplate.opsForHash().get("login_" + userName, token);
+                    userInfoJson = stringRedisTemplate.opsForHash().get(USER_LOGIN_KEY + userName, token);
                     if(userInfoJson == null){
                         throw new ClientException(USER_TOKEN_FAILURE);
                     }

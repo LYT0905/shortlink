@@ -37,6 +37,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.shortlink.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
+import static com.shortlink.common.constant.RedisCacheConstant.USER_LOGIN_KEY;
 import static com.shortlink.common.enums.UserErrorCodeEnums.*;
 
 /**
@@ -141,7 +142,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             throw new ClientException(USER_LOGIN_ERROR);
         }
         // 如果已经登录，直接返回token(避免之前只能在一个地方登录的问题)
-        Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries("login_" + requestParam.getUsername());
+        Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + requestParam.getUsername());
         if(CollUtil.isNotEmpty(hasLoginMap)){
             String token = hasLoginMap.keySet().stream().findFirst().map(Object::toString)
                     .orElseThrow(() -> new ClientException("用户登录信息错误"));
@@ -156,8 +157,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
          *   Value: JSON字符串
          */
         String uuid = UUID.randomUUID().toString();
-        stringRedisTemplate.opsForHash().put("login_" + requestParam.getUsername(), uuid, JSON.toJSONString(userDO));
-        stringRedisTemplate.expire("login_" + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY + requestParam.getUsername(), uuid, JSON.toJSONString(userDO));
+        stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
         return new UserLoginRespDTO(uuid);
     }
 
@@ -169,7 +170,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     public Boolean checkLogin(String username, String token) {
-        return stringRedisTemplate.opsForHash().get("login_" + username, token) != null;
+        return stringRedisTemplate.opsForHash().get(USER_LOGIN_KEY + username, token) != null;
     }
 
     /**
@@ -182,7 +183,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     public void logout(String username, String token) {
         // 判断是否已登录
         if(checkLogin(username, token)){
-            stringRedisTemplate.delete("login_" + username);
+            stringRedisTemplate.delete(USER_LOGIN_KEY + username);
             return;
         }
         throw new ClientException(USER_LOGIN_ERROR);
