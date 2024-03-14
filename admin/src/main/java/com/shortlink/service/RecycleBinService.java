@@ -1,6 +1,6 @@
 package com.shortlink.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shortlink.common.convention.result.Result;
 import com.shortlink.remote.dto.request.RecycleBinPageReqDTO;
 import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
@@ -10,5 +10,5 @@ import com.shortlink.remote.dto.response.ShortLinkPageRespDTO;
  * @date 2024/03/07/16:45
  */
 public interface RecycleBinService {
-    Result<IPage<ShortLinkPageRespDTO>> pageRecycleShortLink(RecycleBinPageReqDTO requestParam);
+    Result<Page<ShortLinkPageRespDTO>> pageRecycleShortLink(RecycleBinPageReqDTO requestParam);
 }

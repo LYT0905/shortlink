@@ -13,7 +13,7 @@ import com.shortlink.dao.mapper.GroupMapper;
 import com.shortlink.dto.request.ShortLinkGroupUpdateReqDTO;
 import com.shortlink.dto.request.ShortLinkGroupUpdateSortReqDTO;
 import com.shortlink.dto.response.ShortLinkGroupRespDTO;
-import com.shortlink.remote.dto.ShortLinkRemoteService;
+import com.shortlink.remote.ShortLinkActualRemoteService;
 import com.shortlink.service.GroupService;
 import com.shortlink.toolkit.RandomGenerator;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ import static com.shortlink.common.constant.RedisCacheConstant.LOCK_GROUP_CREATE
 @RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
-    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {};
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
     private final RedissonClient redissonClient;
 
     @Value("${short-link.group.max-num}")
@@ -100,7 +100,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
         List<GroupDO> groupDOS = baseMapper.selectList(queryWrapper);
         // 查询每组的短链接数量
-        Result<List<ShortLinkGroupRespDTO>> listResult = shortLinkRemoteService.listGroupShortLinkCount(groupDOS.stream()
+        Result<List<ShortLinkGroupRespDTO>> listResult = shortLinkActualRemoteService
+                .listGroupShortLinkCount(groupDOS.stream()
                 .map(GroupDO::getGid).collect(Collectors.toList()));
         List<ShortLinkGroupRespDTO> shortLinkGroupRespDTO = BeanUtil.copyToList(groupDOS, ShortLinkGroupRespDTO.class);
         // 设置每组的短链接数量

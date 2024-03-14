@@ -1,4 +1,4 @@
-package com.shortlink.remote.dto;
+package com.shortlink.remote;
 
 /**
  * @author LYT0905
