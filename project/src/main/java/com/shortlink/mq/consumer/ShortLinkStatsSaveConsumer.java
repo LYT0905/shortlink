@@ -8,9 +8,11 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.shortlink.common.convention.exception.ServiceException;
 import com.shortlink.dao.entity.*;
 import com.shortlink.dao.mapper.*;
 import com.shortlink.dto.biz.ShortLinkStatsRecordDTO;
+import com.shortlink.mq.idempotent.MessageQueueIdempotentHandler;
 import com.shortlink.mq.producer.DelayShortLinkStatsProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +34,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.shortlink.common.constant.RedisKeyConstant.*;
-import static com.shortlink.common.constant.RedisKeyConstant.TODAY_SHORT_LINK_UIP;
 import static com.shortlink.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 
 /**
@@ -57,24 +58,54 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
     private final LinkStatsTodayMapper linkStatsTodayMapper;
     private final DelayShortLinkStatsProducer delayShortLinkStatsProducer;
     private final StringRedisTemplate stringRedisTemplate;
+    private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
 
+    /**
+     * 当接收到消息时的处理逻辑。
+     *
+     * @param message 包含消息详细信息的对象，包括消息流(stream)、消息ID(id)以及消息内容(value)。
+     *                消息内容以Map形式存储，包含全短链(fullShortUrl)、组ID(gid)和统计记录(statsRecord)等信息。
+     */
     @Override
     public void onMessage(MapRecord<String, String, String> message) {
         String stream = message.getStream();
         RecordId id = message.getId();
-        Map<String, String> producerMap = message.getValue();
-        String fullShortUrl = producerMap.get("fullShortUrl");
-        if (StrUtil.isNotBlank(fullShortUrl)) {
-            String gid = producerMap.get("gid");
-            ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
-            actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
+
+        // 判断是否被消费过
+        if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())){
+            // 判断消费流程是否执行完（避免出现因为一些极端原因（如断电），导致实际上没有消费但是判断消费的情况）
+            if (messageQueueIdempotentHandler.isAccomplish(id.toString())){
+                return;
+            }
+            throw new ServiceException("消息未完成流程，需要消息队列进行重试");
         }
-        stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
+        // 使用throwable是怕出现有的异常无法通过exception进行捕捉
+        try {
+            Map<String, String> producerMap = message.getValue();
+            String fullShortUrl = producerMap.get("fullShortUrl");
+            if (StrUtil.isNotBlank(fullShortUrl)) {
+                String gid = producerMap.get("gid");
+                ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
+                actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
+            }
+            stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
+        }catch (Throwable throwable){
+            // 某某某情况宕机了
+            messageQueueIdempotentHandler.delMessageProcessed(id.toString());
+        }
+        // 设置消息流程执行完成
+        messageQueueIdempotentHandler.setAccomplish(id.toString());
     }
 
+    /**
+     * 统计基础访问数据
+     * @param fullShortUrl 完整短链接
+     * @param gid 分组标识
+     * @param statsRecord 数据集合
+     */
     public void actualSaveShortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO statsRecord) {
         Date date = new Date();
         fullShortUrl = Optional.ofNullable(fullShortUrl).orElse(statsRecord.getFullShortUrl());

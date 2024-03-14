@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Builder;
 /**
  * 短链接统计实体
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
  */
 @Data
 @Builder
@@ -58,4 +57,9 @@ public class ShortLinkStatsRecordDTO {
      * UIP访问标识
      */
     private Boolean uipFirstFlag;
+
+    /**
+     * 消息队列唯一标识
+     */
+    private String keys;
 }
