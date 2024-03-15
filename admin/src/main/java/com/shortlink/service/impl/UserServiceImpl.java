@@ -144,6 +144,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         // 如果已经登录，直接返回token(避免之前只能在一个地方登录的问题)
         Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + requestParam.getUsername());
         if(CollUtil.isNotEmpty(hasLoginMap)){
+            // 更新已登录用户的token有效期
+            stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
             String token = hasLoginMap.keySet().stream().findFirst().map(Object::toString)
                     .orElseThrow(() -> new ClientException("用户登录信息错误"));
             return new UserLoginRespDTO(token);
@@ -156,9 +158,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
          *   KEY: token标识
          *   Value: JSON字符串
          */
+        // 生成一个唯一的UUID作为token，防止重复登录提交
         String uuid = UUID.randomUUID().toString();
+        // 将用户登录信息（包含用户详细信息）存储到Redis中，以token为key，过期时间为30分钟
         stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY + requestParam.getUsername(), uuid, JSON.toJSONString(userDO));
         stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
+        // 返回生成的token给客户端
         return new UserLoginRespDTO(uuid);
     }
 
