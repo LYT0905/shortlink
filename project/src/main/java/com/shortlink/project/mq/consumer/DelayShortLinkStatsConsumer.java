@@ -30,6 +30,7 @@ public class DelayShortLinkStatsConsumer implements InitializingBean {
     private final ShortLinkService shortLinkService;
     private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
 
+
     public void onMessage() {
         Executors.newSingleThreadExecutor(
                         runnable -> {
