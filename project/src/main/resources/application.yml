@@ -35,15 +35,6 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-mybatis-plus:
-  global-config:
-    db-config:
-      logic-delete-field: delFlag
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  mapper-locations: classpath:mapper/*.xml
 short-link:
   domain:
     default: nurl.ink:8001
@@ -53,11 +44,12 @@ short-link:
   goto-domain:
     white-list:
       enable: true
-      names: '知乎,掘金,博客园,码云(Gitee), Github, CSND;如果有需要，请联系作者：QQ2713204748, 邮箱liangyutao0905@163.com'
+      names: '知乎,掘金,博客园,码云(Gitee), Github, CSDN, 力扣;如果有需要，请联系作者：QQ2713204748, 邮箱liangyutao0905@163.com'
       details:
         - zhihu.com
         - juejin.cn
         - cnblogs.com
         - gitee.com
         - github.com
-        - www.csdn.net
+        - csdn.net
+        - leetcode.cn

@@ -101,16 +101,15 @@ public class RecycleBinServiceImpl extends ServiceImpl<RecycleBinMapper, ShortLi
     @Override
     public void removeShortLinkRecycleBin(RecycleBinRemoveReqDTO requestParam) {
         LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
-                .eq(ShortLinkDO::getGid, requestParam.getGid())
                 .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
-                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getEnableStatus, 1)
                 .eq(ShortLinkDO::getDelTime, 0L)
-                .eq(ShortLinkDO::getEnableStatus, 1);
-        // link表中增加了del_time字段的唯一索引，避免以前只根据full_short_url可能会造成索引冲突的问题
-        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .eq(ShortLinkDO::getDelFlag, 0);
+        ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
                 .delTime(System.currentTimeMillis())
                 .build();
-        shortLinkDO.setDelFlag(1);
-        baseMapper.update(shortLinkDO, updateWrapper);
+        delShortLinkDO.setDelFlag(1);
+        baseMapper.update(delShortLinkDO, updateWrapper);
     }
 }
