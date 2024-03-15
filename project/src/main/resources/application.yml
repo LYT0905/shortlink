@@ -44,12 +44,11 @@ short-link:
   goto-domain:
     white-list:
       enable: true
-      names: '知乎,掘金,博客园,码云(Gitee), Github, CSDN, 力扣;如果有需要，请联系作者：QQ2713204748, 邮箱liangyutao0905@163.com'
+      names: '知乎,掘金,博客园,码云(Gitee), Github, 力扣;如果有需要，请联系作者：QQ2713204748, 邮箱liangyutao0905@163.com'
       details:
         - zhihu.com
         - juejin.cn
         - cnblogs.com
         - gitee.com
         - github.com
-        - csdn.net
         - leetcode.cn
