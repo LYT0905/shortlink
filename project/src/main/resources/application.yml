@@ -9,6 +9,8 @@ spring:
     # ShardingSphere 配置文件路径
     url: jdbc:shardingsphere:classpath:shardingsphere-config-${database.env:dev}.yaml
   mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
     view:
       prefix: /templates/
       suffix: .html
@@ -28,9 +30,8 @@ spring:
     host: 192.168.6.102
     publisher-confirm-type: correlated
     publisher-returns: true
-    mvc:
-      pathmatch:
-        matching-strategy: ant_path_matcher
+    exchange: short_link_stats_exchange
+
   cloud:
     nacos:
       discovery:

@@ -503,7 +503,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     TimeUnit.MILLISECONDS
             );
             ShortLinkStatsRecordDTO statsRecord = buildLinkStatsRecordAndSetUser(fullShortUrl, request, response);
-            shortLinkStats(fullShortUrl, null, statsRecord);
+            shortLinkStats(fullShortUrl, shortLinkDO.getGid(), statsRecord);
             ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
         }finally {
             lock.unlock();

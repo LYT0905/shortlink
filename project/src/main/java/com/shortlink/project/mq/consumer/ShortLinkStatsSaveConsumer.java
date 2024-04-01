@@ -19,18 +19,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
-import com.shortlink.project.dao.mapper.ShortLinkMapper;
+
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.shortlink.project.common.constant.RedisKeyConstant.*;
@@ -38,12 +39,12 @@ import static com.shortlink.project.common.constant.ShortLinkConstant.AMAP_REMOT
 
 /**
  * 短链接监控状态保存消息队列消费者
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
+ *
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRecord<String, String, String>> {
+public class ShortLinkStatsSaveConsumer{
 
     private final ShortLinkMapper shortLinkMapper;
     private final ShortLinkGotoMapper shortLinkGotoMapper;
@@ -63,42 +64,69 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
 
-    /**
-     * 当接收到消息时的处理逻辑。
-     *
-     * @param message 包含消息详细信息的对象，包括消息流(stream)、消息ID(id)以及消息内容(value)。
-     *                消息内容以Map形式存储，包含全短链(fullShortUrl)、组ID(gid)和统计记录(statsRecord)等信息。
-     */
-    @Override
-    public void onMessage(MapRecord<String, String, String> message) {
-        String stream = message.getStream();
-        RecordId id = message.getId();
-
+    @RabbitListener(queues = "short-link-queue")
+    public void onMessage(Map<String, String> producerMap){
+        String keys = producerMap.get("keys");
         // 判断是否被消费过
-        if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())){
+        if (!messageQueueIdempotentHandler.isMessageProcessed(keys)){
             // 判断消费流程是否执行完（避免出现因为一些极端原因（如断电），导致实际上没有消费但是判断消费的情况）
-            if (messageQueueIdempotentHandler.isAccomplish(id.toString())){
+            if (messageQueueIdempotentHandler.isAccomplish(keys)){
                 return;
             }
             throw new ServiceException("消息未完成流程，需要消息队列进行重试");
         }
         // 使用throwable是怕出现有的异常无法通过exception进行捕捉
         try {
-            Map<String, String> producerMap = message.getValue();
             String fullShortUrl = producerMap.get("fullShortUrl");
-            if (StrUtil.isNotBlank(fullShortUrl)) {
+            if (StrUtil.isNotBlank(fullShortUrl)){
                 String gid = producerMap.get("gid");
-                ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
-                actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
+                ShortLinkStatsRecordDTO statsRecordDTO = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
+                actualSaveShortLinkStats(fullShortUrl, gid, statsRecordDTO);
             }
-            stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
         }catch (Throwable throwable){
             // 某某某情况宕机了
-            messageQueueIdempotentHandler.delMessageProcessed(id.toString());
+            messageQueueIdempotentHandler.delMessageProcessed(keys);
         }
         // 设置消息流程执行完成
-        messageQueueIdempotentHandler.setAccomplish(id.toString());
+        messageQueueIdempotentHandler.setAccomplish(keys);
     }
+
+    /**
+     * 当接收到消息时的处理逻辑。
+     *
+     * @param message 包含消息详细信息的对象，包括消息流(stream)、消息ID(id)以及消息内容(value)。
+     *                消息内容以Map形式存储，包含全短链(fullShortUrl)、组ID(gid)和统计记录(statsRecord)等信息。
+     */
+//    @Override
+//    public void onMessage(MapRecord<String, String, String> message) {
+//        String stream = message.getStream();
+//        RecordId id = message.getId();
+//
+//        // 判断是否被消费过
+//        if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())){
+//            // 判断消费流程是否执行完（避免出现因为一些极端原因（如断电），导致实际上没有消费但是判断消费的情况）
+//            if (messageQueueIdempotentHandler.isAccomplish(id.toString())){
+//                return;
+//            }
+//            throw new ServiceException("消息未完成流程，需要消息队列进行重试");
+//        }
+//        // 使用throwable是怕出现有的异常无法通过exception进行捕捉
+//        try {
+//            Map<String, String> producerMap = message.getValue();
+//            String fullShortUrl = producerMap.get("fullShortUrl");
+//            if (StrUtil.isNotBlank(fullShortUrl)) {
+//                String gid = producerMap.get("gid");
+//                ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
+//                actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
+//            }
+//            stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
+//        }catch (Throwable throwable){
+//            // 某某某情况宕机了
+//            messageQueueIdempotentHandler.delMessageProcessed(id.toString());
+//        }
+//        // 设置消息流程执行完成
+//        messageQueueIdempotentHandler.setAccomplish(id.toString());
+//    }
 
     /**
      * 统计基础访问数据

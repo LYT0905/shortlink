@@ -19,7 +19,7 @@ import static com.shortlink.project.common.constant.RedisKeyConstant.DELAY_QUEUE
 
 /**
  * 延迟记录短链接统计组件
- * TODO 后续重构为RabbitMQ
+ *
  */
 @Component
 @Slf4j
