@@ -84,6 +84,7 @@ public class ShortLinkStatsSaveConsumer{
         }catch (Throwable throwable){
             // 某某某情况宕机了
             messageQueueIdempotentHandler.delMessageProcessed(keys);
+            throw throwable;
         }
         // 设置消息流程执行完成
         messageQueueIdempotentHandler.setAccomplish(keys);
