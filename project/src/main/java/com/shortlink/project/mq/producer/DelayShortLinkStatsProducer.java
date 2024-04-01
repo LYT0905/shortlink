@@ -18,6 +18,7 @@ import static com.shortlink.project.common.constant.RedisKeyConstant.DELAY_QUEUE
  *
  */
 @Component
+@Deprecated
 @RequiredArgsConstructor
 public class DelayShortLinkStatsProducer {
 

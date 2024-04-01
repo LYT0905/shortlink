@@ -280,10 +280,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             RReadWriteLock readWriteLock = redissonClient.getReadWriteLock
                     (String.format(LOCK_GID_UPDATE_KEY, requestParam.getFullShortUrl()));
             RLock rLock = readWriteLock.writeLock();
-            // 没有获取到写锁
-            if (!rLock.tryLock()){
-                throw new ServiceException("短链接正在被访问，请稍后再试");
-            }
+            rLock.lock();
             try {
                 LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
                         .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
