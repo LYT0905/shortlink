@@ -97,22 +97,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
         // 用分布式锁防止短时间内恶意提交重复用户名
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + requestParam.getUsername());
-        try {
-            if(lock.tryLock()){
-                try{
-                    int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
-                    if(insert < 1){
-                        throw new ClientException(USER_SAVE_ERROR);
-                    }
-                }catch (DuplicateKeyException exception){
-                    throw new ClientException(USER_EXIST);
-                }
-                userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
-                groupService.saveGroup(requestParam.getUsername(), "默认分组");
-                return;
-            }
+        if (!lock.tryLock()){
             throw new ClientException(USER_NAME_EXIST);
-        }finally {
+        }
+        try {
+            int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
+            if(insert < 1){
+                throw new ClientException(USER_SAVE_ERROR);
+            }
+            userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+            groupService.saveGroup(requestParam.getUsername(), "默认分组");
+        }catch (DuplicateKeyException exception){
+            throw new ClientException(USER_EXIST);
+        } finally {
             lock.unlock();
         }
     }
