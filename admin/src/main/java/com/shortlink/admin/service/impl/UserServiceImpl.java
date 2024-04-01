@@ -7,11 +7,13 @@ package com.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shortlink.admin.common.biz.user.UserContext;
 import com.shortlink.admin.common.convention.exception.ClientException;
 import com.shortlink.admin.common.enums.UserErrorCodeEnums;
 import com.shortlink.admin.dao.entity.UserDO;
@@ -121,7 +123,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     public void update(UserUpdateReqDTO requestParam) {
-        // TODO 验证当前用户是否为登录用户
+        if (!ObjectUtil.equals(requestParam.getUsername(), UserContext.getUsername())){
+            throw new ClientException("当前用户修改信息失败");
+        }
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class).
                 eq(UserDO::getUsername, requestParam.getUsername());
         baseMapper.update(BeanUtil.toBean(requestParam, UserDO.class), queryWrapper);
