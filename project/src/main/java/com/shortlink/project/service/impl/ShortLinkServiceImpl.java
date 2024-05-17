@@ -469,6 +469,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 ((HttpServletResponse) response).sendRedirect(originalUrl);
                 return;
             }
+            /**
+             * 防止大量空缓存查询数据库
+             */
+            String gotoShortLinkIsNull = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_IS_NULL_KEY, fullShortUrl));
+            if (StringUtil.isNotBlank(gotoShortLinkIsNull)){
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                return;
+            }
             // 通过完整短链接去数据库找到对应的原始短链接
             LambdaQueryWrapper<ShortLinkGotoDO> linkGotoDOWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
                     .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
