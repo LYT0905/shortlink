@@ -405,7 +405,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         // 判断过了有效期
         if (!Objects.equals(hasShortLink.getValidDateType(), requestParam.getValidDateType())
-                || !Objects.equals(hasShortLink.getValidDate(), requestParam.getValidDate())) {
+                || !Objects.equals(hasShortLink.getValidDate(), requestParam.getValidDate())
+                || !Objects.equals(hasShortLink.getOriginUrl(), requestParam.getOriginUrl())) {
             stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
             // 如果是有有效期，并且已经过期了，缓存中才有is_null的key
             if (hasShortLink.getValidDate() != null && hasShortLink.getValidDate().before(new Date())){
