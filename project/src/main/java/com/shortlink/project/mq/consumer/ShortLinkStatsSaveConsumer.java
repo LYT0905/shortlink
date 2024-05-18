@@ -83,7 +83,11 @@ public class ShortLinkStatsSaveConsumer{
             }
         }catch (Throwable throwable){
             // 某某某情况宕机了
-            messageQueueIdempotentHandler.delMessageProcessed(keys);
+            try{
+                messageQueueIdempotentHandler.delMessageProcessed(keys);
+            }catch (Throwable ex){
+                log.error("删除幂等标识错误", ex);
+            }
             throw throwable;
         }
         // 设置消息流程执行完成
