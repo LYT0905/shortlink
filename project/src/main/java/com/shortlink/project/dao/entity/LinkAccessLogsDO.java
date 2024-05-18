@@ -33,11 +33,6 @@ public class LinkAccessLogsDO extends BaseDO {
     private String fullShortUrl;
 
     /**
-     * 分组标识
-     */
-    private String gid;
-
-    /**
      * 用户信息
      */
     private String user;
@@ -71,5 +66,10 @@ public class LinkAccessLogsDO extends BaseDO {
      * 地区
      */
     private String locale;
+
+    /**
+     * 启用标识 0：启用 1：未启用
+     */
+    private Integer enableStatus;
 
 }

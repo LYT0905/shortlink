@@ -161,7 +161,6 @@ public class ShortLinkStatsSaveConsumer{
                     .hour(hour)
                     .weekday(weekValue)
                     .fullShortUrl(fullShortUrl)
-                    .gid(gid)
                     .date(date)
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
@@ -184,7 +183,6 @@ public class ShortLinkStatsSaveConsumer{
                         .cnt(1)
                         .fullShortUrl(fullShortUrl)
                         .country("中国")
-                        .gid(gid)
                         .date(date)
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
@@ -193,7 +191,6 @@ public class ShortLinkStatsSaveConsumer{
             LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
                     .os(statsRecord.getOs())
                     .cnt(1)
-                    .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .date(date)
                     .build();
@@ -202,7 +199,6 @@ public class ShortLinkStatsSaveConsumer{
             LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
                     .browser(statsRecord.getBrowser())
                     .cnt(1)
-                    .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .date(date)
                     .build();
@@ -211,7 +207,6 @@ public class ShortLinkStatsSaveConsumer{
             LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
                     .device(statsRecord.getDevice())
                     .cnt(1)
-                    .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .date(date)
                     .build();
@@ -220,7 +215,6 @@ public class ShortLinkStatsSaveConsumer{
             LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
                     .network(statsRecord.getNetwork())
                     .cnt(1)
-                    .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .date(date)
                     .build();
@@ -234,7 +228,6 @@ public class ShortLinkStatsSaveConsumer{
                     .network(statsRecord.getNetwork())
                     .device(statsRecord.getDevice())
                     .locale(StrUtil.join("-", "中国", actualProvince, actualCity))
-                    .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .build();
             linkAccessLogsMapper.insert(linkAccessLogsDO);
@@ -270,7 +263,6 @@ public class ShortLinkStatsSaveConsumer{
                     .todayUv(todayUvFlag ? 1 : 0)
                     .todayUip(todayUIpFlag ? 1 : 0)
                     .fullShortUrl(fullShortUrl)
-                    .gid(gid)
                     .date(date)
                     .build();
             linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);

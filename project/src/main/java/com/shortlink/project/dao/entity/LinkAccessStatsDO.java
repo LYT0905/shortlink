@@ -28,10 +28,6 @@ public class LinkAccessStatsDO extends BaseDO {
      */
     private Long id;
 
-    /**
-     * 分组标识
-     */
-    private String gid;
 
     /**
      * 完整短链接

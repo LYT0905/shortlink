@@ -32,7 +32,7 @@ public class ShortLinkStatsController {
      */
     @GetMapping("/api/short-link/admin/v1/stats")
     public Result<ShortLinkStatsRespDTO> stats(ShortLinkStatsReqDTO requestParam){
-        return shortLinkActualRemoteService.oneShortLinkStats(requestParam.getFullShortUrl(), requestParam.getGid(), requestParam.getStartDate(), requestParam.getEndDate());
+        return shortLinkActualRemoteService.oneShortLinkStats(requestParam.getFullShortUrl(), requestParam.getGid(), requestParam.getEnableStatus(), requestParam.getStartDate(), requestParam.getEndDate());
     }
 
     /**
@@ -40,7 +40,14 @@ public class ShortLinkStatsController {
      */
     @GetMapping("/api/short-link/admin/v1/stats/access-record")
     public Result<Page<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
-        return shortLinkActualRemoteService.shortLinkStatsAccessRecord(requestParam.getFullShortUrl(), requestParam.getGid(), requestParam.getStartDate(), requestParam.getEndDate());
+        return shortLinkActualRemoteService.shortLinkStatsAccessRecord(
+                requestParam.getFullShortUrl(),
+                requestParam.getGid(),
+                requestParam.getStartDate(),
+                requestParam.getEndDate(),
+                requestParam.getEnableStatus(),
+                requestParam.getCurrent(),
+                requestParam.getSize());
     }
 
     /**
